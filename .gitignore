@@ -28,4 +28,3 @@ __pycache__/
 # Local temporary and verification repositories
 /temp_source/
 /verify_repo/
-/Backend/storage/
