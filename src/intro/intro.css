@@ -1,0 +1,226 @@
+/*
+ * Opening sequence. Full-bleed, above everything, black ground so the
+ * hand-off into the app's own near-black background is seamless.
+ *
+ * Type here is deliberately louder than anywhere else in the product: the
+ * intro is the one place a display scale earns its keep, and the contrast
+ * between this and the restrained 13px engineering UI is part of the point.
+ */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #000;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.6s var(--ease-out, cubic-bezier(0.2, 0.8, 0.2, 1));
+}
+.intro-leaving { opacity: 0; pointer-events: none; }
+
+.intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: opacity 0.7s var(--ease-out, ease), transform 0.7s var(--ease-out, ease);
+}
+/* Once the part is assembled it becomes the backdrop for the text beats:
+ * dimmed and pushed back, so the headline is never fighting the artwork. */
+.intro-canvas.dim { opacity: 0.22; transform: scale(1.06); }
+
+/* Keeps the corners dark so the centre reads first. */
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(68% 58% at 50% 50%, transparent 38%, rgba(0, 0, 0, 0.82) 100%);
+}
+
+/* ---------------- press to initialize ---------------- */
+.intro-start {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  width: 232px;
+  height: 232px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(134, 254, 76, 0.1), transparent 68%);
+  color: #f6f7f5;
+  cursor: pointer;
+  font: inherit;
+}
+.intro-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(134, 254, 76, 0.55);
+  box-shadow: 0 0 34px rgba(134, 254, 76, 0.26), inset 0 0 34px rgba(134, 254, 76, 0.12);
+  animation: intro-pulse 2.4s ease-in-out infinite;
+}
+.intro-start:hover .intro-ring { border-color: #9aff61; box-shadow: 0 0 52px rgba(134, 254, 76, 0.45); }
+.intro-start:focus-visible { outline: none; }
+.intro-start:focus-visible .intro-ring { border-color: #9aff61; box-shadow: 0 0 0 3px rgba(134, 254, 76, 0.5); }
+.intro-start-label {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+}
+.intro-start-sub {
+  font-family: var(--mono, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #86fe4c;
+}
+@keyframes intro-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.055); opacity: 1; }
+}
+
+/* ---------------- text beats ---------------- */
+.intro-stage {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 24px;
+  pointer-events: none;
+}
+/* Every beat occupies the same cell, so they cross-fade in place. */
+.intro-beat {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.42s var(--ease-out, ease), transform 0.42s var(--ease-out, ease);
+}
+.intro-beat.on { opacity: 1; transform: none; }
+
+.intro-kicker {
+  display: block;
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #86fe4c;
+  margin-bottom: 14px;
+}
+.intro-title h1 {
+  margin: 0;
+  font-size: clamp(40px, 9vw, 104px);
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  color: #fff;
+  text-shadow: 0 0 60px rgba(134, 254, 76, 0.3);
+}
+.intro-rule {
+  display: block;
+  width: 180px;
+  height: 1px;
+  margin: 22px auto 0;
+  background: linear-gradient(90deg, transparent, #86fe4c, transparent);
+}
+
+.intro-college-1 {
+  margin: 0;
+  font-size: clamp(16px, 2.4vw, 24px);
+  font-weight: 500;
+  color: #b4b8b2;
+  letter-spacing: 0.01em;
+}
+.intro-college-2 {
+  margin: 8px 0 0;
+  font-size: clamp(20px, 3.4vw, 38px);
+  font-weight: 700;
+  color: #f6f7f5;
+  letter-spacing: -0.015em;
+}
+
+.intro-wordmark {
+  display: block;
+  font-family: 'Montserrat', var(--font, sans-serif);
+  font-weight: 800;
+  font-size: clamp(38px, 8.5vw, 96px);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.intro-wordmark em {
+  font-style: normal;
+  background: linear-gradient(90deg, #86fe4c, #9aff61 60%, #e6ffd8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.intro-tag {
+  display: block;
+  margin-top: 16px;
+  font-size: clamp(11px, 1.5vw, 13.5px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8b908a;
+}
+
+/* ---------------- chrome ---------------- */
+.intro-skip {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  color: #b4b8b2;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+}
+.intro-skip:hover { color: #fff; border-color: rgba(255, 255, 255, 0.36); }
+.intro-skip:focus-visible { outline: none; box-shadow: 0 0 0 2px #000, 0 0 0 4px #86fe4c; }
+.intro-skip kbd {
+  font-family: var(--mono, monospace);
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #8b908a;
+}
+
+.intro-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  z-index: 4;
+}
+.intro-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #5fbe33, #9aff61);
+  transform-origin: 0 50%;
+  box-shadow: 0 0 12px rgba(134, 254, 76, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-ring { animation: none; }
+  .intro-beat { transition-duration: 0.01ms; transform: none; }
+}
