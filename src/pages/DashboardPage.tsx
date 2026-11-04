@@ -7,6 +7,8 @@ import { VERDICT_LABEL } from '../workspace/validation';
 import type { Verdict } from '../workspace/validation';
 import { useWorkspace } from '../workspace/useWorkspace';
 import { fmtDateTime } from './shared';
+import { AddComponentButton } from '../customComponents/AddComponentDialog';
+import { CustomComponentsPanel } from '../customComponents/CustomComponentPage';
 
 const FLOW: { id: SectionId; what: string }[] = [
   { id: 'design-lab', what: 'Edit design A and candidate B' },
@@ -63,8 +65,11 @@ export function DashboardPage() {
           <button className="btn" onClick={() => navigate({ section: 'digital-twin', module: 'alloy-wheel' })}>
             Alloy wheel twin
           </button>
+          <AddComponentButton className="btn cc-add" />
         </div>
       </section>
+
+      <CustomComponentsPanel />
 
       <div className="kpis">
         <Panel bodyClass="kpi">

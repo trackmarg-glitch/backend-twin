@@ -15,6 +15,9 @@ import { LineChart } from '../../ui/LineChart';
 import { Badge, Panel, fmt } from '../../ui/primitives';
 import { ViewportInfo } from '../../ui/ViewportInfo';
 import { TwinWorkspace } from '../../ui/TwinWorkspace';
+import { RunCompletePanel, useRunCapture } from '../../twinRuns/RunCompletePanel';
+import { buildBrakeRun } from '../../twinRuns/brakeRun';
+import { workspace } from '../../workspace/useWorkspace';
 
 const PHASE_LABEL: Record<string, string> = {
   stopped: 'Stopped',
@@ -79,6 +82,7 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
   const [display, setDisplay] = useState<DisplayMode>('solid');
 
   useEffect(() => onRunningChange?.(sim.running), [sim.running, onRunningChange]);
+  useRunCapture(s.finished, () => buildBrakeRun(sim, { design: workspace.caliper.B, inputs: workspace.caliperInputs }));
 
   // Hold Space to brake. Ignored while typing in a field.
   useEffect(() => {
@@ -115,6 +119,7 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
 
   return (
     <div className="page">
+      <RunCompletePanel component="brake-caliper" />
       <div className="page-head">
         <div>
           <h1>Brake Caliper Digital Twin</h1>

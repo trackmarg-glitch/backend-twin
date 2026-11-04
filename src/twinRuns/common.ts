@@ -14,9 +14,15 @@ export function overall(checks: RunCheck[]) {
   return { verdict, counts };
 }
 
-/** First time a series reaches `level` (inclusive), or null. */
+/** First time a series reaches `level` (inclusive), interpolated between samples, or null. */
 export function firstCrossing(points: RunPoint[], level: number): number | null {
-  for (const p of points) if (p.v >= level) return p.t;
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    if (p.v < level) continue;
+    const q = points[i - 1];
+    if (!q || p.v === q.v) return p.t;
+    return q.t + ((level - q.v) / (p.v - q.v)) * (p.t - q.t);
+  }
   return null;
 }
 

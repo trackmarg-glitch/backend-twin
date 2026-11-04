@@ -74,6 +74,7 @@ def create_app() -> FastAPI:
     from app.api.routes import (
         assets,
         assistant,
+        cad,
         chat,
         cost,
         estimate,
@@ -85,7 +86,7 @@ def create_app() -> FastAPI:
     )
 
     for module in (
-        health, projects, studies, jobs, assets, assistant, chat, cost, reports, estimate,
+        health, projects, studies, jobs, assets, assistant, chat, cost, reports, estimate, cad,
     ):
         app.include_router(module.router, prefix="/api")
 

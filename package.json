@@ -15,11 +15,14 @@
     "test:chat": "node --experimental-strip-types scripts/chat-check.ts",
     "test:wheel": "node --experimental-strip-types scripts/wheel-check.ts",
     "test:analytics": "node --experimental-strip-types scripts/analytics-check.ts",
-    "test": "npm run test:sim && npm run test:engine && npm run test:workspace && npm run test:insights && npm run test:experiment && npm run test:chat && npm run test:wheel && npm run test:analytics"
+    "test:twinrun": "node --experimental-strip-types scripts/twinrun-check.ts",
+    "test:cad": "node --experimental-strip-types scripts/cad-check.ts",
+    "test": "npm run test:sim && npm run test:engine && npm run test:workspace && npm run test:insights && npm run test:experiment && npm run test:chat && npm run test:wheel && npm run test:analytics && npm run test:twinrun && npm run test:cad"
   },
   "dependencies": {
     "@react-three/drei": "9.121.5",
     "@react-three/fiber": "8.17.14",
+    "occt-import-js": "0.0.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "three": "0.169.0"

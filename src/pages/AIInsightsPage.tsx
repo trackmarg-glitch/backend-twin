@@ -19,13 +19,14 @@ import { VERDICT_LABEL } from '../workspace/validation';
 import type { DesignValidation, RuleResult } from '../workspace/validation';
 import type { WorkspaceStore } from '../workspace/WorkspaceStore';
 import { VerdictTag, marginText } from './shared';
+import { RunVerdictPanel } from '../twinRuns/RunVerdictPanel';
 
 /**
  * AI Insights: why each design passes or fails, what drives it, and which
  * change to candidate B would fix it. Verdicts come from the validation engine;
  * the explanation text comes from the active provider (local rules here).
  */
-export function AIInsightsPage() {
+export function AIInsightsPage({ runId }: { runId?: string } = {}) {
   const { ws, ctx, provider, explanation, fellBack, violations } = useInsights();
   const c = ctx.component;
   const [openRule, setOpenRule] = useState<string | null>(null);
@@ -127,6 +128,8 @@ export function AIInsightsPage() {
           </button>
         </div>
       </div>
+
+      {runId && <RunVerdictPanel runId={runId} />}
 
       <div className="ai-top">
         <VerdictCard slot="A" v={ctx.validation.A} />

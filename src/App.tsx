@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { AppShell } from './shell/AppShell';
+import { INTRO_SESSION_KEY, IntroSequence } from './intro/IntroSequence';
 import { ModuleSwitch } from './shell/ModuleSwitch';
 import { navigate, useRoute } from './app/routes';
 import { BrakeCaliperDashboard } from './modules/brakeCaliper/BrakeCaliperDashboard';
@@ -12,15 +13,41 @@ import { AIInsightsPage } from './pages/AIInsightsPage';
 import { ExperimentPage } from './pages/ExperimentPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { TwinRunAnalysisPage } from './twinRuns/TwinRunAnalysisPage';
+import { CustomComponentPage } from './customComponents/CustomComponentPage';
+
+/**
+ * The intro plays once per browser session, so reloading mid-demo drops
+ * straight into the app. `#/...?intro` (or clearing session storage)
+ * replays it on purpose.
+ */
+function shouldPlayIntro() {
+  try {
+    if (window.location.hash.includes('intro')) return true;
+    return window.sessionStorage.getItem(INTRO_SESSION_KEY) !== '1';
+  } catch {
+    return true; // sessionStorage blocked (private mode): just play it.
+  }
+}
 
 export default function App() {
   const route = useRoute();
   const [running, setRunning] = useState(false);
+  const [intro, setIntro] = useState(shouldPlayIntro);
+
+  const endIntro = useCallback(() => {
+    try {
+      window.sessionStorage.setItem(INTRO_SESSION_KEY, '1');
+    } catch {
+      /* non-fatal */
+    }
+    setIntro(false);
+  }, []);
 
   let page;
   switch (route.section) {
     case 'dashboard':
-      page = <DashboardPage />;
+      page = route.componentId ? <CustomComponentPage key={route.componentId} id={route.componentId} /> : <DashboardPage />;
       break;
     case 'design-lab':
       page = <DesignLabPage />;
@@ -29,13 +56,13 @@ export default function App() {
       page = <ExperimentPage />;
       break;
     case 'analytics':
-      page = <AnalyticsPage />;
+      page = route.runId ? <TwinRunAnalysisPage key={route.runId} runId={route.runId} /> : <AnalyticsPage />;
       break;
     case 'reports':
       page = <ReportsPage />;
       break;
     case 'ai-insights':
-      page = <AIInsightsPage />;
+      page = <AIInsightsPage runId={route.runId} />;
       break;
     case 'digital-twin': {
       const moduleSwitch = (
@@ -57,8 +84,11 @@ export default function App() {
 
   // Only the Digital Twin pages run a live sim, so the "running" chip is idle everywhere else.
   return (
-    <AppShell active={route.section} running={route.section === 'digital-twin' && running}>
-      {page}
-    </AppShell>
+    <>
+      <AppShell active={route.section} running={route.section === 'digital-twin' && running}>
+        {page}
+      </AppShell>
+      {intro && <IntroSequence onDone={endIntro} />}
+    </>
   );
 }

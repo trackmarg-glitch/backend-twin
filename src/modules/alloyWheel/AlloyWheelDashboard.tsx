@@ -17,6 +17,8 @@ import { WheelParametersPanel } from './components/WheelParametersPanel';
 import { WheelTelemetryPanel, fmtCycles, fmtLife, sci } from './components/WheelTelemetryPanel';
 import { ViewportInfo } from '../../ui/ViewportInfo';
 import { TwinWorkspace } from '../../ui/TwinWorkspace';
+import { RunCompletePanel, useRunCapture } from '../../twinRuns/RunCompletePanel';
+import { buildWheelRun } from '../../twinRuns/wheelRun';
 import { DisplayModeButtons } from '../../three/displayMode';
 import type { DisplayMode } from '../../three/displayMode';
 import '../../three/displayMode.css';
@@ -67,6 +69,7 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
   useStoreVersion(clock);
   const s = sim.state;
   const p = sim.params;
+  useRunCapture(s.finished, () => buildWheelRun({ params: p, state: s, history: sim.history, lifeKm: sim.lifeKm }));
   const [view, setView] = useState<WheelView>('iso');
   const [viewNonce, setViewNonce] = useState(0);
   const [showTyre, setShowTyre] = useState(true);
@@ -155,6 +158,7 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
 
   return (
     <div className="page">
+      <RunCompletePanel component="alloy-wheel" />
       <div className="page-head">
         <div>
           <h1>Alloy Wheel Digital Twin</h1>

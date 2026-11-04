@@ -28,6 +28,8 @@ export interface Route {
   module: TwinModule;
   /** A finished twin run to open (#/analytics/run/<id>, #/ai-insights/run/<id>). */
   runId?: string;
+  /** A user-added component to open (#/dashboard/component/<id>). */
+  componentId?: string;
 }
 
 export const SECTIONS: { id: SectionId; label: string; icon: string }[] = [
@@ -49,10 +51,12 @@ export function parseHash(hash: string): Route {
   const section = SECTION_IDS.has(parts[0]) ? (parts[0] as SectionId) : 'dashboard';
   const module: TwinModule = parts[1] === 'spark-plug' || parts[1] === 'alloy-wheel' ? parts[1] : 'brake-caliper';
   const runId = parts[1] === 'run' && parts[2] ? decodeURIComponent(parts[2]) : undefined;
-  return { section, module, runId };
+  const componentId = parts[1] === 'component' && parts[2] ? decodeURIComponent(parts[2]) : undefined;
+  return { section, module, runId, componentId };
 }
 
 export function routeHash(r: Partial<Route> & { section: SectionId }) {
+  if (r.componentId) return `#/dashboard/component/${encodeURIComponent(r.componentId)}`;
   if (r.runId && r.section !== 'digital-twin') return `#/${r.section}/run/${encodeURIComponent(r.runId)}`;
   return r.section === 'digital-twin' ? `#/digital-twin/${r.module ?? 'brake-caliper'}` : `#/${r.section}`;
 }

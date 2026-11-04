@@ -12,7 +12,7 @@ import type { BrakeParams, BrakeState, Sample } from '../modules/brakeCaliper/si
 import { caliperEstimate } from '../workspace/estimators.ts';
 import type { CaliperDesign, CaliperInputs } from '../workspace/designs.ts';
 import { downsample, firstCrossing, fmtS, maxCheck, overall, peak } from './common.ts';
-import type { RunAdvice, RunCheck, RunEvent, RunPoint, RunSeries, TwinRun } from './types.ts';
+import type { RunAdvice, RunCheck, RunEvent, RunPoint, TwinRun } from './types.ts';
 
 /** Demo thresholds for a grey-iron rotor with typical organic pads. */
 export const BRAKE_LIMITS = {
@@ -48,18 +48,20 @@ const SCENARIO_LABEL: Record<string, string> = {
 const pts = (h: Sample[], f: (s: Sample) => number): RunPoint[] => h.map((s) => ({ t: s.t, v: f(s) }));
 
 /** Fastest rotor heating over any 0.5 s window, °C/s, and when it happened. */
-function heatingRate(temp: RunPoint[]): RunPoint {
+function heatingRate(temp: RunPoint[]): RunPoint & { series: RunPoint[] } {
   let best: RunPoint = { t: 0, v: 0 };
+  const series: RunPoint[] = [];
   let j = 0;
   for (let i = 0; i < temp.length; i++) {
     while (j < i && temp[i].t - temp[j].t > 0.5) j++;
     const dt = temp[i].t - temp[j].t;
     if (dt >= 0.2) {
       const rate = (temp[i].v - temp[j].v) / dt;
+      series.push({ t: temp[i].t, v: rate });
       if (rate > best.v) best = { t: temp[i].t, v: rate };
     }
   }
-  return best;
+  return { ...best, series };
 }
 
 export function buildBrakeRun(sim: BrakeRunSource, ref: CaliperReference): Omit<TwinRun, 'id' | 'createdAt'> {
@@ -120,7 +122,7 @@ export function buildBrakeRun(sim: BrakeRunSource, ref: CaliperReference): Omit<
         why: 'How fast the temperature climbs. A steep climb means the rotor cannot shed heat as fast as the brake puts it in.',
         after: 'Rapid heating gives large temperature differences through the rotor, the main cause of thermal stress, distortion and cracking.',
       },
-      null,
+      rate.series,
       BRAKE_LIMITS.heatRateReviewCps,
       BRAKE_LIMITS.heatRateReviewCps,
       'review',
