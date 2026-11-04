@@ -6,7 +6,27 @@ import { recheckBackend, useBackend } from '../api/useBackend';
 import { NavIcon } from './NavIcons';
 import { SidebarArt } from './SidebarArt';
 import { CommandPalette } from './CommandPalette';
+import { toggleTheme, useTheme } from '../theme/themeMode';
 import './shell.css';
+
+function ThemeButton() {
+  const theme = useTheme();
+  const next = theme === 'pastel' ? 'Studio (dark)' : 'Pastel glass';
+  return (
+    <button className="at-theme-btn" onClick={toggleTheme} aria-label={`Switch to ${next} theme`} title={`Switch to ${next} theme`}>
+      {theme === 'pastel' ? (
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+          <path d="M16 12.5A6.5 6.5 0 0 1 7.5 4a6.5 6.5 0 1 0 8.5 8.5z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+          <circle cx="10" cy="10" r="3.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.4 1.4M14.3 14.3l1.4 1.4M4.3 15.7l1.4-1.4M14.3 5.7l1.4-1.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 /** Live connection to the FastAPI backend. Click to re-check. */
 function BackendChip() {
@@ -206,6 +226,7 @@ export function AppShell({ children, active, running }: { children: ReactNode; a
               <span className="at-search-text">Jump to…</span>
               <kbd>Ctrl K</kbd>
             </button>
+            <ThemeButton />
             <span className="at-user" title="Signed-in role">
               <span className="at-avatar" aria-hidden="true">RD</span>
               <span className="at-user-name">R&amp;D Engineer</span>

@@ -28,3 +28,12 @@ __pycache__/
 # Local temporary and verification repositories
 /temp_source/
 /verify_repo/
+
+# Reference videos/images: never publish (user instruction)
+*.mp4
+*.mov
+*reference*.mp4
+*reference*.jpeg
+*reference*.jpg
+* ref.jpeg
+* ref.jpg

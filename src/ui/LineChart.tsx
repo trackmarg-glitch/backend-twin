@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { inkFor, useTheme } from '../theme/themeMode';
 
 /**
  * Canvas line chart used by both modules. One series, an optional dashed grey
@@ -35,10 +36,11 @@ export interface LineChartProps<T> {
   headValue?: number;
 }
 
-const GRID = 'rgba(148, 163, 184, 0.10)';
-const ZERO = 'rgba(148, 163, 184, 0.28)';
-const AXIS_TEXT = '#64748b';
-const REF = '#94a3b8';
+/** Axis/grid inks per app theme (series colours go through inkFor()). */
+const CHART = {
+  studio: { grid: 'rgba(148, 163, 184, 0.10)', zero: 'rgba(148, 163, 184, 0.28)', axis: '#64748b', ref: '#94a3b8', dotRing: '#0f182b', cross: 'rgba(226, 232, 240, 0.35)' },
+  pastel: { grid: 'rgba(60, 64, 120, 0.10)', zero: 'rgba(60, 64, 120, 0.28)', axis: '#5b5f84', ref: '#7a7ea6', dotRing: '#ffffff', cross: 'rgba(60, 64, 120, 0.35)' },
+} as const;
 const PAD = { l: 42, r: 8, t: 8, b: 20 };
 
 function niceStep(range: number, ticks: number) {
@@ -53,9 +55,12 @@ const yLabel = (v: number) =>
 
 export function LineChart<T>(props: LineChartProps<T>) {
   const {
-    title, unit, color, data, version, x, y, xMax, xMin = 0, xStep, xTick, xTip,
+    title, unit, color: rawColor, data, version, x, y, xMax, xMin = 0, xStep, xTick, xTip,
     reference, referenceLabel, seriesLabel, digits = 0, minYMax,
   } = props;
+  const theme = useTheme();
+  const color = inkFor(rawColor, theme);
+  const C = CHART[theme];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hoverX, setHoverX] = useState<number | null>(null);
@@ -105,13 +110,13 @@ export function LineChart<T>(props: LineChartProps<T>) {
     ctx.textBaseline = 'middle';
     for (let v = yMin; v <= yMax + yStep * 1e-6; v += yStep) {
       const yy = Math.round(Y(v)) + 0.5;
-      ctx.strokeStyle = Math.abs(v) < yStep * 1e-6 && yMin < 0 ? ZERO : GRID;
+      ctx.strokeStyle = Math.abs(v) < yStep * 1e-6 && yMin < 0 ? C.zero : C.grid;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(PAD.l, yy);
       ctx.lineTo(PAD.l + pw, yy);
       ctx.stroke();
-      ctx.fillStyle = AXIS_TEXT;
+      ctx.fillStyle = C.axis;
       ctx.fillText(yLabel(v), PAD.l - 6, yy);
     }
     // x labels
@@ -119,7 +124,7 @@ export function LineChart<T>(props: LineChartProps<T>) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     for (let v = Math.ceil(xMin / step) * step; v <= xMax + step * 1e-6; v += step) {
-      ctx.fillStyle = AXIS_TEXT;
+      ctx.fillStyle = C.axis;
       ctx.fillText(xTick(v), Math.min(Math.max(X(v), PAD.l + 8), PAD.l + pw - 12), PAD.t + ph + 6);
     }
     if (!data.length) return;
@@ -128,7 +133,7 @@ export function LineChart<T>(props: LineChartProps<T>) {
     if (reference) {
       ctx.save();
       ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = REF;
+      ctx.strokeStyle = C.ref;
       ctx.globalAlpha = 0.7;
       ctx.lineWidth = 1.25;
       ctx.beginPath();
@@ -160,14 +165,14 @@ export function LineChart<T>(props: LineChartProps<T>) {
       ctx.fillStyle = color;
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#0f182b';
+      ctx.strokeStyle = C.dotRing;
       ctx.stroke();
     };
     if (marker) dot(X(marker.x), Y(marker.y));
 
     if (hovered) {
       const hx = X(x(hovered));
-      ctx.strokeStyle = 'rgba(226, 232, 240, 0.35)';
+      ctx.strokeStyle = C.cross;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(hx, PAD.t);
@@ -175,7 +180,7 @@ export function LineChart<T>(props: LineChartProps<T>) {
       ctx.stroke();
       dot(hx, Y(y(hovered)));
     }
-  }, [version, size, hoverX, xMin, xMax, yMin, yMax, color, marker?.x, marker?.y]);
+  }, [version, size, hoverX, xMin, xMax, yMin, yMax, color, theme, marker?.x, marker?.y]);
 
   const head = props.headValue ?? marker?.y ?? 0;
 
@@ -220,7 +225,7 @@ export function LineChart<T>(props: LineChartProps<T>) {
             {seriesLabel}
           </span>
           <span>
-            <i className="dash" style={{ borderColor: REF }} />
+            <i className="dash" style={{ borderColor: C.ref }} />
             {referenceLabel}
           </span>
         </div>

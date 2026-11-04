@@ -1,0 +1,17 @@
+/* Viewport display modes (Solid | Mesh | Temperature): legends. Builds on .vp-legend's glass style. */
+/* In the toolbar's flow as its own full-width row, so it always sits above the buttons and never under them. */
+.vp-bottom > .vp-legend.dm-legend { position: static; flex: 0 0 100%; box-sizing: border-box; flex-wrap: wrap; row-gap: 4px; padding-top: 22px; }
+.vp-bottom > .vp-legend.dm-legend:not(:has(.dm-bar)) { padding-top: 6px; padding-bottom: 6px; }
+.dm-bar { position: relative; display: inline-block; width: 180px; height: 8px; border-radius: 4px; }
+.dm-mark {
+  position: absolute; top: -4px; width: 2px; height: 16px; margin-left: -1px; background: var(--text); border-radius: 1px;
+}
+.dm-mark b {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-family: var(--mono);
+  font-size: 10.5px; font-weight: 700; color: var(--text); padding: 1px 5px; border-radius: 4px; background: var(--surface);
+  border: 1px solid var(--border);
+}
+.dm-mark.below b { bottom: auto; top: 18px; }
+.dm-cap { flex-basis: 100%; font-size: 10.5px; color: var(--text-2); font-family: inherit; }
+.vp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.dm-legend:has(.dm-mark.below) .dm-cap { margin-top: 16px; }

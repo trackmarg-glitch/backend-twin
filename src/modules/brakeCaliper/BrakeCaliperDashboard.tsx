@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { BrakeSim, MODEL } from './sim/brakeModel';
 import { BrakeSimContext, pressureColor, useSimSnapshot } from './sim/useBrakeSim';
+import { BRAKE_HEAT_RANGE } from './three/BrakeScene';
+import { DisplayModeButtons, HeatLegend } from '../../three/displayMode';
+import type { DisplayMode } from '../../three/displayMode';
+import '../../three/displayMode.css';
 import { BrakeScene } from './three/BrakeScene';
 import type { CameraView } from './three/BrakeScene';
 import { CLEARANCE_EXAGGERATION } from './three/BrakeAssembly';
@@ -72,6 +76,7 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
   const [viewNonce, setViewNonce] = useState(0);
   const [cutaway, setCutaway] = useState(true);
   const [showTyre, setShowTyre] = useState(true);
+  const [display, setDisplay] = useState<DisplayMode>('solid');
 
   useEffect(() => onRunningChange?.(sim.running), [sim.running, onRunningChange]);
 
@@ -191,7 +196,7 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
         <ParametersPanel />
 
         <div className="viewport">
-          <BrakeScene sim={sim} view={view} viewNonce={viewNonce} cutaway={cutaway} showTyre={showTyre} />
+          <BrakeScene sim={sim} view={view} viewNonce={viewNonce} cutaway={cutaway} showTyre={showTyre} display={display} />
           <ViewportInfo>
             <div className="t">Front corner brake assembly — fixed caliper, rotating wheel + rotor</div>
             <div className="d">
@@ -215,12 +220,26 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
           {!sim.running && (
             <div className="vp-paused">{s.finished ? 'RUN COMPLETE' : s.t === 0 ? 'READY · PRESS PLAY' : 'PAUSED'}</div>
           )}
-          <div className="vp-legend">
-            <span>0</span>
-            <span className="bar" />
-            <span>≥10 MPa</span>
-          </div>
+          {display === 'solid' && (
+            <div className="vp-legend">
+              <span>0</span>
+              <span className="bar" />
+              <span>≥10 MPa</span>
+            </div>
+          )}
           <div className="vp-bottom">
+            {display === 'temperature' && (
+              <HeatLegend
+                range={BRAKE_HEAT_RANGE}
+                marks={[{ label: 'rotor', value: s.rotorTempC }]}
+                caption="Model · one lumped rotor temperature, not a temperature field"
+              />
+            )}
+            {display === 'mesh' && (
+              <div className="vp-legend dm-legend">
+                <span className="dm-cap">Twin display mesh: triangles of the 3D model, not the solver mesh (see Experiment → Solver results in 3D)</span>
+              </div>
+            )}
             {(['front', 'side', 'iso'] as CameraView[]).map((v) => (
               <button key={v} className={`vp-btn ${view === v ? 'active' : ''}`} onClick={() => chooseView(v)}>
                 {v === 'front' ? 'Front' : v === 'side' ? 'Side section' : 'Isometric'}
@@ -233,6 +252,12 @@ function DashboardBody({ moduleSwitch, onRunningChange }: DashboardProps) {
             <button className={`vp-btn ${showTyre ? 'active' : ''}`} aria-pressed={showTyre} onClick={() => setShowTyre(!showTyre)}>
               Tyre
             </button>
+            <span style={{ width: 8 }} />
+            <DisplayModeButtons
+              mode={display}
+              onChange={setDisplay}
+              temperatureTitle="Rotor coloured by the brake model's rotor temperature (one lumped value); other parts grey"
+            />
             <button
               className="vp-btn"
               style={{ marginLeft: 'auto' }}

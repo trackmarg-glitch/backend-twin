@@ -46,7 +46,7 @@ export function deckHeight(g: EngineGeometry) {
 /* ------------------------------------------------------- shared materials */
 
 function createMaterials() {
-  return {
+  return nameAll({
     steel: new THREE.MeshStandardMaterial({ color: '#aab6c4', metalness: 0.92, roughness: 0.3 }),
     darkSteel: new THREE.MeshStandardMaterial({ color: '#49566a', metalness: 0.85, roughness: 0.42 }),
     block: new THREE.MeshStandardMaterial({
@@ -85,7 +85,13 @@ function createMaterials() {
     }),
     tipA: new THREE.MeshStandardMaterial({ metalness: 0.7, roughness: 0.4, emissiveIntensity: 1.1 }),
     tipB: new THREE.MeshStandardMaterial({ metalness: 0.7, roughness: 0.4, emissiveIntensity: 1.1 }),
-  };
+  });
+}
+
+/** Names each material after its key, so viewport display modes can tell parts apart (e.g. the A and B tips). */
+function nameAll<T extends Record<string, THREE.Material>>(mats: T): T {
+  for (const [k, v] of Object.entries(mats)) v.name = k;
+  return mats;
 }
 type Mats = ReturnType<typeof createMaterials>;
 const MatsContext = createContext<Mats | null>(null);

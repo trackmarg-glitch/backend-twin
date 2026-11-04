@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Grid, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,11 @@ import type { CameraPreset } from '../../../three/common';
 import type { EngineSim, PlugGeometry } from '../sim/engineSim';
 import { EngineSimContext, useEngineSim } from '../sim/useEngineSim';
 import { ENGINE_Y, EngineScene } from './EngineScene';
+import { SceneDisplay } from '../../../three/displayMode';
+import type { DisplayMode, HeatSource } from '../../../three/displayMode';
+
+/** Heat scale for the plug tips, °C: spans the 450–850 °C heat-range window with room either side. */
+export const PLUG_HEAT_RANGE: [number, number] = [200, 1000];
 
 export type EngineView = 'cutaway' | 'front' | 'side' | 'tips';
 
@@ -33,6 +38,8 @@ export const EngineCanvas = memo(function EngineCanvas({
   tipColours,
   plug,
   combustion,
+  display = 'solid',
+  tipTemps = { A: null, B: null },
 }: {
   sim: EngineSim;
   view: EngineView;
@@ -41,7 +48,18 @@ export const EngineCanvas = memo(function EngineCanvas({
   tipColours: Record<'A' | 'B', string>;
   plug: PlugGeometry;
   combustion: boolean;
+  /** Solid, mesh (triangle structure) or temperature colouring. */
+  display?: DisplayMode;
+  /** Tip temperature of plug A and plug B, °C (null = none entered). */
+  tipTemps?: Record<'A' | 'B', number | null>;
 }) {
+  const heat = useMemo<HeatSource>(
+    () => ({
+      range: PLUG_HEAT_RANGE,
+      tempOf: (m) => (m.name === 'tipA' ? tipTemps.A : m.name === 'tipB' ? tipTemps.B : null),
+    }),
+    [tipTemps.A, tipTemps.B],
+  );
   return (
     <Canvas
       dpr={[1, 2]}
@@ -66,6 +84,7 @@ export const EngineCanvas = memo(function EngineCanvas({
           showBlock={showBlock && view !== 'tips'}
           combustion={combustion}
         />
+        <SceneDisplay mode={display} heat={heat} />
         <Grid
           position={[0, ENGINE_Y - 0.115, 0]}
           args={[4, 4]}

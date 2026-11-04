@@ -39,7 +39,7 @@ export const CALIPER_DIR = new THREE.Vector3(0, Math.cos(CALIPER_ANGLE), Math.si
 function useMaterials() {
   return useMemo(() => {
     const std = (p: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial(p);
-    return {
+    const mats = {
       rotor: std({ color: '#9aa0a8', metalness: 0.85, roughness: 0.36 }),
       rotorDark: std({ color: '#5b6068', metalness: 0.8, roughness: 0.55 }),
       slot: std({ color: '#1f2227', metalness: 0.4, roughness: 0.8 }),
@@ -60,6 +60,9 @@ function useMaterials() {
       knuckle: std({ color: '#2b3038', metalness: 0.55, roughness: 0.65 }),
       bolt: std({ color: '#8e959e', metalness: 1, roughness: 0.3 }),
     };
+    // Named so viewport display modes can tell the parts apart (e.g. colour the rotor by temperature).
+    for (const [k, v] of Object.entries(mats)) v.name = k;
+    return mats;
   }, []);
 }
 type Mats = ReturnType<typeof useMaterials>;

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { navigate } from '../app/routes';
 import { ModuleSwitch } from '../shell/ModuleSwitch';
 import type { ModuleId } from '../shell/ModuleSwitch';
@@ -23,6 +25,7 @@ import type { WorkspaceStore } from '../workspace/WorkspaceStore';
 import type { Verdict } from '../workspace/validation';
 import { ChecksList, DeltaCell } from './shared';
 import { LabAB3D } from './LabAB3D';
+import './labDiff.css';
 
 const VERDICT_SHORT: Record<Verdict, string> = { pass: 'pass', review: 'review', fail: 'fail' };
 
@@ -64,13 +67,15 @@ export function DesignLabPage() {
         <div className="page-actions">
           {moduleSwitch}
           <button className="btn" onClick={() => navigate({ section: 'digital-twin', module: c })}>
-            ◉ Open twin
+            Open twin
           </button>
           <button className="btn primary" onClick={() => navigate({ section: 'experiment' })}>
-            ◷ Test in Experiment →
+            Test in Experiment →
           </button>
         </div>
       </div>
+
+      <ChangeSummary ws={ws} est={est} />
 
       <LabAB3D />
 
@@ -118,6 +123,174 @@ function DesignPanel({ ws, slot }: { ws: WorkspaceStore; slot: Slot }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* What B changes: only the differences, linked to the B form fields.  */
+
+interface ParamChange {
+  key: string;
+  label: string;
+  unit: string;
+  digits: number;
+  A: number;
+  B: number;
+}
+
+const differs = (a: number, b: number) => Math.abs(b - a) > 1e-9;
+
+/** Every geometry parameter of the active component, with its A and B values. */
+function paramRows(ws: WorkspaceStore): ParamChange[] {
+  const specs = ws.component === 'brake-caliper' ? CALIPER_PARAMS : PLUG_PARAMS;
+  const pair = ws.component === 'brake-caliper' ? ws.caliper : ws.plug;
+  const val = (slot: Slot, key: string) => (pair[slot] as unknown as Record<string, number>)[key];
+  return specs.map((p) => ({ key: p.key, label: p.label, unit: p.unit, digits: p.digits, A: val('A', p.key), B: val('B', p.key) }));
+}
+
+/** Material selects in the B panel, matched to materialDiffs() labels. */
+const MATERIAL_FIELD_ID: Record<string, string> = {
+  Material: 'b-materialId',
+  Insulator: 'b-insulatorId',
+  'Centre electrode': 'b-electrodeId',
+};
+
+function jumpTo(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ block: 'center', behavior: reduce ? 'auto' : 'smooth' });
+  el.classList.remove('flash');
+  void el.offsetWidth; // restart the highlight animation
+  el.classList.add('flash');
+  el.querySelector<HTMLElement>('input.num, select')?.focus({ preventScroll: true });
+}
+
+const pct = (a: number, b: number) => (Math.abs(a) > 1e-12 ? ((b - a) / Math.abs(a)) * 100 : null);
+const signed = (v: number, digits: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${fmt(Math.abs(v), digits)}`;
+
+function ChangeSummary({ ws, est }: { ws: WorkspaceStore; est: DesignEstimates }) {
+  const params = paramRows(ws);
+  const changed = params.filter((p) => differs(p.A, p.B));
+  const mats = materialDiffs(ws).filter((m) => m.A !== m.B);
+  const total = params.length + materialDiffs(ws).length;
+  const n = changed.length + mats.length;
+  const results = est.rows.filter((r) => Math.abs(r.B - r.A) >= 0.5 * Math.pow(10, -r.digits));
+
+  return (
+    <section className="panel ab-summary" aria-label="What design B changes">
+      <div className="abs-head">
+        <span className="abs-title">What design B changes</span>
+        <span className="abs-revs">
+          <span className="a-txt">A · {est.revisions.A}</span>
+          <span className="abs-arrow" aria-hidden="true">→</span>
+          <span className="b-txt">B · {est.revisions.B}</span>
+        </span>
+        <span className="abs-count">
+          {n} of {total} inputs differ
+        </span>
+        {n > 0 && (
+          <button className="btn sm abs-reset" onClick={() => ws.copyAToB(ws.component)} title="Copy design A's geometry and material into B">
+            Match B to A
+          </button>
+        )}
+      </div>
+
+      {n === 0 ? (
+        <div className="hint">
+          B is identical to A. Change a parameter in Design B below, and each difference appears here with its effect on
+          the estimates.
+        </div>
+      ) : (
+        <>
+          <div className="abs-chips" role="list">
+            {mats.map((m) => (
+              <button
+                key={m.label}
+                role="listitem"
+                className="abs-chip"
+                onClick={() => jumpTo(MATERIAL_FIELD_ID[m.label] ?? '')}
+                title={`${m.label}: ${m.A} → ${m.B}. Click to edit in Design B.`}
+              >
+                <span className="k">{m.label}</span>
+                <span className="v mat">
+                  <span className="a-txt">{m.A}</span> → <span className="b-txt">{m.B}</span>
+                </span>
+              </button>
+            ))}
+            {changed.map((p) => {
+              const unit = p.unit === '–' ? '' : ` ${p.unit}`;
+              const pc = pct(p.A, p.B);
+              return (
+                <button
+                  key={p.key}
+                  role="listitem"
+                  className="abs-chip"
+                  onClick={() => jumpTo(`b-${p.key}`)}
+                  title="Click to edit this parameter in Design B"
+                >
+                  <span className="k">{p.label}</span>
+                  <span className="v">
+                    <span className="a-txt">{fmt(p.A, p.digits)}</span> → <span className="b-txt">{fmt(p.B, p.digits)}</span>
+                    {unit}
+                  </span>
+                  {pc !== null && <span className="d">{signed(pc, 1)}%</span>}
+                </button>
+              );
+            })}
+          </div>
+          <div className="abs-results">
+            <span className="abs-results-label">
+              Effect on estimates <Badge kind="estimated" />
+            </span>
+            {results.length === 0 ? (
+              <span className="hint">No visible change in the estimated results.</span>
+            ) : (
+              results.map((r) => {
+                const d = r.B - r.A;
+                const pc = pct(r.A, r.B);
+                const better = r.lowerIsBetter === null ? null : r.lowerIsBetter ? d < 0 : d > 0;
+                return (
+                  <span key={r.key} className={`abs-res ${better === null ? '' : better ? 'better' : 'worse'}`}>
+                    {r.label}{' '}
+                    <b>
+                      {signed(d, r.digits)}
+                      {r.unit && r.unit !== '–' ? ` ${r.unit}` : ''}
+                    </b>
+                    {pc !== null && <small> ({signed(pc, 1)}%)</small>}
+                  </span>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Wraps a Design B field: an anchor for the summary chips, and a "differs from A" marker with a one-click revert. */
+function BField({
+  id,
+  changed,
+  children,
+}: {
+  id: string;
+  changed: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div id={id} className={`b-field ${changed ? 'changed' : ''}`}>
+      {children}
+    </div>
+  );
+}
+
+function UseA({ value, digits, unit, onUse }: { value: number; digits: number; unit: string; onUse: () => void }) {
+  return (
+    <button className="use-a" onClick={onUse} title={`Differs from design A. Click to use A's value (${fmt(value, digits)}${unit === '–' ? '' : ' ' + unit}).`}>
+      A {fmt(value, digits)}
+    </button>
+  );
+}
+
 function RevisionField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <label className="stack-field">
@@ -132,15 +305,37 @@ function MaterialField({
   value,
   options,
   onChange,
+  id,
+  aValue,
 }: {
   label: string;
   value: string;
   options: { id: string; name: string }[];
   onChange: (id: string) => void;
+  /** Design B only: anchor id, and A's choice to compare against. */
+  id?: string;
+  aValue?: string;
 }) {
+  const changed = aValue !== undefined && aValue !== value;
+  const aName = options.find((o) => o.id === aValue)?.name;
   return (
-    <label className="stack-field">
-      <span>{label}</span>
+    <label className={`stack-field ${id ? 'b-field' : ''} ${changed ? 'changed' : ''}`} id={id}>
+      <span className="stack-label">
+        {label}
+        {changed && aValue && (
+          <button
+            type="button"
+            className="use-a"
+            onClick={(e) => {
+              e.preventDefault();
+              onChange(aValue);
+            }}
+            title={`Differs from design A (${aName}). Click to use A's choice.`}
+          >
+            Use A
+          </button>
+        )}
+      </span>
       <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
         {options.map((m) => (
           <option key={m.id} value={m.id}>
@@ -154,6 +349,8 @@ function MaterialField({
 
 function CaliperFields({ ws, slot }: { ws: WorkspaceStore; slot: Slot }) {
   const d = ws.caliper[slot];
+  const a = ws.caliper.A;
+  const isB = slot === 'B';
   const mat = CALIPER_MATERIALS.find((m) => m.id === d.materialId) ?? CALIPER_MATERIALS[0];
   return (
     <>
@@ -163,30 +360,49 @@ function CaliperFields({ ws, slot }: { ws: WorkspaceStore; slot: Slot }) {
         value={d.materialId}
         options={CALIPER_MATERIALS}
         onChange={(materialId) => ws.setCaliper(slot, { materialId })}
+        id={isB ? 'b-materialId' : undefined}
+        aValue={isB ? a.materialId : undefined}
       />
       <div className="mat-props">
         ρ {fmt(mat.densityKgM3)} kg/m³ · E {fmt(mat.eMPa / 1000, 1)} GPa · yield {fmt(mat.yieldMPa)} MPa
       </div>
-      {CALIPER_PARAMS.map((p) => (
-        <SliderField
-          key={p.key}
-          label={p.label}
-          hint={p.hint}
-          value={d[p.key]}
-          min={p.min}
-          max={p.max}
-          step={p.step}
-          digits={p.digits}
-          unit={p.unit === '–' ? undefined : p.unit}
-          onChange={(v) => ws.setCaliper(slot, { [p.key]: v })}
-        />
-      ))}
+      {CALIPER_PARAMS.map((p) => {
+        const changed = isB && differs(a[p.key], d[p.key]);
+        const field = (
+          <SliderField
+            key={p.key}
+            label={p.label}
+            hint={p.hint}
+            value={d[p.key]}
+            min={p.min}
+            max={p.max}
+            step={p.step}
+            digits={p.digits}
+            unit={p.unit === '–' ? undefined : p.unit}
+            badge={
+              changed ? (
+                <UseA value={a[p.key]} digits={p.digits} unit={p.unit} onUse={() => ws.setCaliper('B', { [p.key]: a[p.key] })} />
+              ) : undefined
+            }
+            onChange={(v) => ws.setCaliper(slot, { [p.key]: v })}
+          />
+        );
+        return isB ? (
+          <BField key={p.key} id={`b-${p.key}`} changed={changed}>
+            {field}
+          </BField>
+        ) : (
+          field
+        );
+      })}
     </>
   );
 }
 
 function PlugFields({ ws, slot }: { ws: WorkspaceStore; slot: Slot }) {
   const d = ws.plug[slot];
+  const a = ws.plug.A;
+  const isB = slot === 'B';
   return (
     <>
       <RevisionField value={d.revision} onChange={(revision) => ws.setPlug(slot, { revision })} />
@@ -195,27 +411,46 @@ function PlugFields({ ws, slot }: { ws: WorkspaceStore; slot: Slot }) {
         value={d.insulatorId}
         options={INSULATOR_MATERIALS}
         onChange={(insulatorId) => ws.setPlug(slot, { insulatorId })}
+        id={isB ? 'b-insulatorId' : undefined}
+        aValue={isB ? a.insulatorId : undefined}
       />
       <MaterialField
         label="Centre electrode"
         value={d.electrodeId}
         options={ELECTRODE_MATERIALS}
         onChange={(electrodeId) => ws.setPlug(slot, { electrodeId })}
+        id={isB ? 'b-electrodeId' : undefined}
+        aValue={isB ? a.electrodeId : undefined}
       />
-      {PLUG_PARAMS.map((p) => (
-        <SliderField
-          key={p.key}
-          label={p.label}
-          hint={p.hint}
-          value={d[p.key]}
-          min={p.min}
-          max={p.max}
-          step={p.step}
-          digits={p.digits}
-          unit={p.unit}
-          onChange={(v) => ws.setPlug(slot, { [p.key]: v })}
-        />
-      ))}
+      {PLUG_PARAMS.map((p) => {
+        const changed = isB && differs(a[p.key], d[p.key]);
+        const field = (
+          <SliderField
+            key={p.key}
+            label={p.label}
+            hint={p.hint}
+            value={d[p.key]}
+            min={p.min}
+            max={p.max}
+            step={p.step}
+            digits={p.digits}
+            unit={p.unit}
+            badge={
+              changed ? (
+                <UseA value={a[p.key]} digits={p.digits} unit={p.unit} onUse={() => ws.setPlug('B', { [p.key]: a[p.key] })} />
+              ) : undefined
+            }
+            onChange={(v) => ws.setPlug(slot, { [p.key]: v })}
+          />
+        );
+        return isB ? (
+          <BField key={p.key} id={`b-${p.key}`} changed={changed}>
+            {field}
+          </BField>
+        ) : (
+          field
+        );
+      })}
     </>
   );
 }
@@ -283,12 +518,25 @@ function EstimateNote({ component }: { component: ComponentId }) {
 }
 
 function DiffPanel({ ws }: { ws: WorkspaceStore }) {
-  const rows = parameterDiffs(ws);
-  const mats = materialDiffs(ws);
-  const changed = rows.filter((r) => Math.abs(r.B - r.A) > 1e-9).length + mats.filter((m) => m.A !== m.B).length;
+  const [onlyChanged, setOnlyChanged] = useState(true);
+  const allRows = parameterDiffs(ws);
+  const allMats = materialDiffs(ws);
+  const changed = allRows.filter((r) => differs(r.A, r.B)).length + allMats.filter((m) => m.A !== m.B).length;
+  const rows = onlyChanged ? allRows.filter((r) => differs(r.A, r.B)) : allRows;
+  const mats = onlyChanged ? allMats.filter((m) => m.A !== m.B) : allMats;
+  const right = (
+    <div className="panel-actions">
+      <span className="hint">{changed} changed</span>
+      <label className="diff-only">
+        <input type="checkbox" checked={onlyChanged} onChange={(e) => setOnlyChanged(e.target.checked)} />
+        Only changed
+      </label>
+    </div>
+  );
   return (
-    <Panel title="Parameter differences" right={<span className="hint">{changed} changed</span>}>
-      <table className="data-table">
+    <Panel title="Parameter differences" right={right}>
+      {rows.length + mats.length === 0 && <div className="hint">No differences: B matches A.</div>}
+      <table className="data-table" hidden={rows.length + mats.length === 0}>
         <thead>
           <tr>
             <th>Parameter</th>

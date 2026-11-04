@@ -1,4 +1,37 @@
-# AutoTwin design system: Precision Engineering Studio
+# AutoTwin design system
+
+AutoTwin ships two themes on the same tokens and components, switched with `<html data-theme>` (`src/theme/themeMode.ts`, remembered per browser):
+
+| Theme | Default | Look | File |
+|---|---|---|---|
+| **Pastel Glass** | yes | Light frosted-glass panels over a soft pink / blue / lavender gradient, layered cards with depth, pink→violet→blue gradient for primary actions | `src/theme/pastel.css` |
+| **Studio** (dark) | | Obsidian / titanium / ice cyan / signal amber, described below | `src/theme/theme.css` |
+
+Switch with the moon/sun button in the top bar, or Ctrl+K → "Switch theme".
+
+## Pastel Glass
+
+| Token | Value | Contrast on glass over pink / blue (#fbeaf3 / #eaf1ff) |
+|---|---|---|
+| `--text-primary` | #1e2142 | 13.4 / 13.7:1 |
+| `--text-secondary` | #474c72 | 7.1 / 7.3:1 |
+| `--text-muted` | #5d628a | 5.1 / 5.2:1 |
+| `--accent-cyan` (primary accent) | #4a5fd6 | 4.7 / 4.8:1 |
+| `--accent-ice` (design B) | #2f68c9 | 4.6 / 4.7:1 |
+| `--accent-pink` (eyebrows, active icon) | #a8306a | 5.5:1 |
+| `--status-success` / `-warning` (also design A) / `-danger` | #127a54 / #955600 / #bd2f4b | 4.6 / 5.0 / 4.9:1 |
+| `--status-model` | #6544cc | 5.6:1 |
+| White text on the primary gradient (#c63f86 → #7a55d6 → #3f5fd0) | | 4.7 / 5.1 / 5.6:1 |
+| Badge inks on their tints (e.g. estimated #864d00 on #ffeecc) | | ≥ 5.5:1 |
+| Chart series (dark-theme colours × 0.62 via `inkFor()`) on the stage | | ≥ 3.7:1 (graphics minimum is 3:1) |
+
+**Materials.** Panels, tiles, hero, sidebar and top bar are frosted glass: 58–62% white, `blur(18px) saturate(160%)`, a white hairline and a soft violet-tinted shadow, with a 92% white fallback when blur is unsupported. The 3D stage is a light pink-to-blue studio gradient. The twin canvases are transparent, and the AI Insights / Design Lab 3D viewers use `<ThemeBackground />`. Status and state chips are light tints with darkened inks; nothing relies on colour alone.
+
+**What the image-prompt "mobile app" brief maps to here.** AutoTwin is a desktop engineering app. The pastel look applies to every page, and at phone width (390px) the rail is a 68px icon strip and pages stack with no horizontal overflow (tested on Dashboard, Brake twin and Design Lab).
+
+---
+
+## Studio (dark): Precision Engineering Studio
 
 Source: `src/theme/theme.css` (loaded last), `src/shell/shell.css`, `src/ui/twinWorkspace.css` and `src/ui/viewportInfo.css`.
 

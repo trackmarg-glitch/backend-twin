@@ -10,7 +10,10 @@ import { EngineSim } from './sim/engineSim';
 import { EngineSimContext, useEngineSnapshot } from './sim/useEngineSim';
 import { EngineParametersPanel, TIME_SCALES } from './components/EngineParametersPanel';
 import { EngineTelemetryPanel } from './components/EngineTelemetryPanel';
-import { ENGINE_VIEWS, EngineCanvas } from './three/EngineCanvas';
+import { ENGINE_VIEWS, EngineCanvas, PLUG_HEAT_RANGE } from './three/EngineCanvas';
+import { DisplayModeButtons, HeatLegend } from '../../three/displayMode';
+import type { DisplayMode } from '../../three/displayMode';
+import '../../three/displayMode.css';
 import type { EngineView } from './three/EngineCanvas';
 import { A_COLOUR, B_COLOUR } from './three/EngineScene';
 import { ViewportInfo } from '../../ui/ViewportInfo';
@@ -59,6 +62,7 @@ function Body({ moduleSwitch, onRunningChange }: DashboardProps) {
   const [view, setView] = useState<EngineView>('cutaway');
   const [viewNonce, setViewNonce] = useState(0);
   const [showBlock, setShowBlock] = useState(true);
+  const [display, setDisplay] = useState<DisplayMode>('solid');
 
   useEffect(() => onRunningChange?.(sim.running), [sim.running, onRunningChange]);
 
@@ -197,6 +201,8 @@ function Body({ moduleSwitch, onRunningChange }: DashboardProps) {
             tipColours={tipColours}
             plug={p.plug}
             combustion={p.showCombustion}
+            display={display}
+            tipTemps={{ A: p.tipTempA, B: p.tipTempB }}
           />
           <ViewportInfo>
             <div className="t">Split-plug A/B arrangement — one engine, identical operating conditions</div>
@@ -236,6 +242,25 @@ function Body({ moduleSwitch, onRunningChange }: DashboardProps) {
             </div>
           )}
           <div className="vp-bottom">
+            {display === 'temperature' && (
+              <HeatLegend
+                range={PLUG_HEAT_RANGE}
+                marks={[
+                  ...(p.tipTempA === null ? [] : [{ label: 'A', value: p.tipTempA }]),
+                  ...(p.tipTempB === null ? [] : [{ label: 'B', value: p.tipTempB }]),
+                ]}
+                caption={
+                  p.tipTempA === null && p.tipTempB === null
+                    ? 'No tip temperatures entered: enter them in the parameters panel'
+                    : 'Plug tips coloured by the entered tip temperatures (not solver output); other parts grey'
+                }
+              />
+            )}
+            {display === 'mesh' && (
+              <div className="vp-legend dm-legend">
+                <span className="dm-cap">Twin display mesh: triangles of the 3D model, not the solver mesh (see Experiment → Solver results in 3D)</span>
+              </div>
+            )}
             {(Object.keys(ENGINE_VIEWS) as EngineView[]).map((v) => (
               <button
                 key={v}
@@ -260,6 +285,12 @@ function Body({ moduleSwitch, onRunningChange }: DashboardProps) {
             >
               🔥 Combustion {p.showCombustion ? 'on' : 'off'}
             </button>
+            <span style={{ width: 8 }} />
+            <DisplayModeButtons
+              mode={display}
+              onChange={setDisplay}
+              temperatureTitle="Plug tips coloured by the entered tip temperatures; other parts grey"
+            />
             <button className="vp-btn" style={{ marginLeft: 'auto' }} onClick={() => setViewNonce((n) => n + 1)}>
               ↺ Reset view
             </button>

@@ -1,0 +1,57 @@
+/* Solver result viewer: mesh structure, temperature and stress fields. Theme tokens only. */
+.rv { display: flex; flex-direction: column; gap: 8px; }
+.rv-modes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rv-modes .vp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.rv-title { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.rv-canvas { position: relative; height: 440px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: var(--surface-2); }
+.rv-canvas canvas { display: block; }
+.rv-loading { display: flex; align-items: center; justify-content: center; height: 200px; }
+.rv-legend {
+  position: absolute; top: 12px; right: 12px; padding: 8px 10px; border-radius: 8px; pointer-events: none;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+.rv-legend-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.rv-legend-body { display: flex; gap: 8px; }
+.rv-bar { width: 14px; height: 150px; border-radius: 4px; border: 1px solid var(--border); }
+.rv-ticks { display: flex; flex-direction: column; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.rv-hover {
+  position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 2px; padding: 6px 9px; border-radius: 6px;
+  background: var(--surface); border: 1px solid var(--border); font-size: 12px; color: var(--text); pointer-events: none;
+}
+.rv-hover b { font-family: var(--mono); font-size: 13px; }
+.rv-hover span { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.rv-stats {
+  position: absolute; left: 12px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none;
+}
+.rv-stats span {
+  font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 5px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.rv-dim {
+  font-family: var(--mono); font-size: 11px; font-weight: 600; white-space: nowrap; padding: 2px 6px; border-radius: 4px;
+  color: var(--text); background: var(--surface); border: 1px solid var(--border-strong);
+}
+.rv-peak {
+  transform: translate(10px, -14px); white-space: nowrap; font-family: var(--mono); font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px; color: #fff; background: rgba(15, 23, 42, 0.85);
+}
+.rv-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.rv-slider { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+.rv-slider input { width: 140px; }
+.rv-home { margin-left: auto; }
+.rv-note { line-height: 1.55; }
+
+.rs-all { margin-left: 4px; }
+.rs-pickers { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; }
+.rs-pickers .stack-field { flex: 1 1 340px; padding: 0; }
+.rs-cands { display: flex; flex-wrap: wrap; gap: 6px; }
+.rs-cand {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+  border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text);
+}
+.rs-cand small { font-size: 10px; color: var(--accent-2); text-transform: uppercase; letter-spacing: 0.05em; }
+.rs-cand.active { border-color: var(--accent-2); box-shadow: 0 0 0 1px var(--accent-2) inset; }
+.rs-ok { color: var(--green); font-size: 11px; }
+.rs-bad { color: var(--red); font-size: 11px; }
+@media (max-width: 700px) { .rv-canvas { height: 340px; } .rv-bar { height: 110px; } }
+.rs-stale { margin-bottom: 8px; font-size: 12px; }

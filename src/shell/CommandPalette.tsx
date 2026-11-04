@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { SECTIONS, navigate } from '../app/routes';
 import type { SectionId, TwinModule } from '../app/routes';
 import { NavIcon } from './NavIcons';
+import { toggleTheme } from '../theme/themeMode';
 
 interface Command {
   id: string;
@@ -49,6 +50,7 @@ export function CommandPalette({ onToggleRail }: { onToggleRail: () => void }) {
       }
     }
     list.push({ id: 'rail', label: 'Collapse / expand sidebar', hint: 'Ctrl+B', icon: 'dashboard', run: onToggleRail });
+    list.push({ id: 'theme', label: 'Switch theme (pastel glass / studio dark)', hint: 'Appearance', icon: 'dashboard', run: toggleTheme });
     return list;
   }, [onToggleRail]);
 

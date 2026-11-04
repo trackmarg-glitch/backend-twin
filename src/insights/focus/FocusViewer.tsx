@@ -16,6 +16,7 @@ import type { AnyDesign } from '../designAccess';
 import { PART_LABEL, abFocus, lerpDesign, partsOf } from './focusSpec';
 import '../insights.css';
 import type { FocusSpec, PartId } from './focusSpec';
+import { ThemeBackground } from '../../theme/ThemeBackground';
 
 /**
  * Focused 3D view for AI Insights: the part a change touches glows, and the
@@ -863,7 +864,7 @@ export function FocusViewer({ spec, src }: { spec: FocusSpec; src: InsightSource
             gl.localClippingEnabled = true;
           }}
         >
-          <color attach="background" args={['#0a1020']} />
+          <ThemeBackground />
           <StudioEnvironment />
           <ambientLight intensity={0.45} />
           <directionalLight position={[1.2, 2, 1.5]} intensity={1.7} />
@@ -1116,7 +1117,7 @@ function LabPane({
         gl.localClippingEnabled = true;
       }}
     >
-      <color attach="background" args={['#0a1020']} />
+      <ThemeBackground />
       <StudioEnvironment />
       <ambientLight intensity={0.45} />
       <directionalLight position={[1.2, 2, 1.5]} intensity={1.7} />

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { SolverRunPanel } from '../api/SolverRunPanel';
+import { SolverResults3D } from '../viewer/SolverResults3D';
 import { navigate } from '../app/routes';
 import { FocusViewer } from '../insights/focus/FocusViewer';
 import { abFocus } from '../insights/focus/focusSpec';
@@ -182,6 +183,9 @@ export function ExperimentPage() {
 
       {/* Slow, real CAD → mesh → FEA study on the backend; separate from the instant A/B bench above. */}
       <SolverRunPanel component={c} />
+
+      {/* The solver's own mesh and temperature / stress fields, for any finished study. */}
+      <SolverResults3D component={c} />
     </div>
   );
 }

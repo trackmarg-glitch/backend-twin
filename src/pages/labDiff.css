@@ -1,0 +1,99 @@
+/* Design Lab: "What design B changes" summary, B-field change markers, diff filter.
+ * Uses the studio tokens from src/theme/theme.css. A = amber, B = ice (as elsewhere). */
+
+.ab-summary { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.abs-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.abs-title { font-size: 15px; font-weight: 600; color: var(--text); }
+.abs-revs { font-family: var(--mono); font-size: 12px; display: inline-flex; gap: 8px; align-items: baseline; }
+.abs-arrow { color: var(--muted); }
+.a-txt { color: var(--amber); }
+.b-txt { color: var(--accent-2); }
+.abs-count { font-size: 12.5px; color: var(--text-2); }
+.abs-reset { margin-left: auto; }
+
+.abs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.abs-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 6px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.abs-chip:hover { border-color: rgba(141, 201, 240, 0.5); background: var(--surface-3); }
+.abs-chip:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.abs-chip .k { color: var(--text-2); white-space: nowrap; }
+.abs-chip .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.abs-chip .v.mat { font-family: var(--font); font-weight: 500; overflow: hidden; text-overflow: ellipsis; max-width: 46ch; }
+.abs-chip .d { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+
+.abs-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.abs-results-label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+.abs-res b { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+.abs-res small { font-family: var(--mono); color: var(--muted); font-size: 11px; }
+/* Direction only, with a text-free cue in the arrow glyph below: lower stress / higher FoS etc.
+ * This is an estimate trend, not a safety verdict (the checks panel owns verdicts). */
+.abs-res.better b { color: var(--green); }
+.abs-res.worse b { color: var(--red); }
+.abs-res.better b::before { content: '▲ '; font-size: 9px; vertical-align: 1px; }
+.abs-res.worse b::before { content: '▼ '; font-size: 9px; vertical-align: 1px; }
+
+/* B-form fields that differ from A: a left rule plus a one-click "use A" chip. */
+.b-field { position: relative; border-radius: 8px; }
+.b-field.changed::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-2);
+}
+.b-field.flash { animation: b-flash 1.2s var(--ease-out, ease); }
+@keyframes b-flash {
+  0%, 30% { background: rgba(141, 201, 240, 0.14); box-shadow: 0 0 0 6px rgba(141, 201, 240, 0.14); }
+  100% { background: transparent; box-shadow: 0 0 0 6px transparent; }
+}
+.use-a {
+  flex: none;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(241, 184, 93, 0.45);
+  background: rgba(241, 184, 93, 0.08);
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.use-a:hover { background: rgba(241, 184, 93, 0.16); }
+.use-a:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.use-a::before { content: '↺ '; }
+.stack-field .stack-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.diff-only { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); cursor: pointer; }
+.diff-only input { accent-color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .b-field.flash { animation: none; }
+}

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,21 @@ import type { CameraPreset } from '../../../three/common';
 import { BrakeSimContext, useBrakeSim } from '../sim/useBrakeSim';
 import type { BrakeSim } from '../sim/brakeModel';
 import { BrakeAssembly, CALIPER_DIR } from './BrakeAssembly';
+import { SceneDisplay } from '../../../three/displayMode';
+import type { DisplayMode, HeatSource } from '../../../three/displayMode';
+
+/** Rotor parts carry the model's rotor temperature; the twin has no temperature for anything else. */
+const ROTOR_PARTS = new Set(['rotor', 'rotorDark', 'hat', 'slot']);
+export const BRAKE_HEAT_RANGE: [number, number] = [20, 500];
+
+function BrakeDisplay({ mode }: { mode: DisplayMode }) {
+  const sim = useBrakeSim();
+  const heat = useMemo<HeatSource>(
+    () => ({ range: BRAKE_HEAT_RANGE, tempOf: (m) => (ROTOR_PARTS.has(m.name) ? sim.state.rotorTempC : null) }),
+    [sim],
+  );
+  return <SceneDisplay mode={mode} heat={heat} />;
+}
 
 export type CameraView = 'front' | 'side' | 'iso';
 
@@ -36,12 +51,15 @@ export const BrakeScene = memo(function BrakeScene({
   viewNonce,
   cutaway,
   showTyre,
+  display = 'solid',
 }: {
   sim: BrakeSim;
   view: CameraView;
   viewNonce: number;
   cutaway: boolean;
   showTyre: boolean;
+  /** Solid, mesh (triangle structure) or temperature colouring. */
+  display?: DisplayMode;
 }) {
   return (
     <Canvas
@@ -66,6 +84,7 @@ export const BrakeScene = memo(function BrakeScene({
         <directionalLight position={[-1.2, 0.4, -1]} intensity={1.1} color="#7dd3fc" />
         <pointLight position={[0.5, -0.4, 0.6]} intensity={0.6} color="#38bdf8" />
         <BrakeAssembly cutaway={cutaway} showTyre={showTyre} />
+        <BrakeDisplay mode={display} />
         <Grid
           position={[0, -0.345, 0]}
           args={[4, 4]}

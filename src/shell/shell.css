@@ -265,6 +265,19 @@
   color: var(--text-secondary);
   background: rgba(218, 232, 250, 0.04);
 }
+.at-theme-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline-strong);
+  background: rgba(218, 232, 250, 0.03);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.at-theme-btn:hover { color: var(--text-primary); border-color: rgba(218, 232, 250, 0.26); }
+.at-theme-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .at-user { display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 13px; }
 .at-avatar {
   display: grid;

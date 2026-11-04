@@ -17,6 +17,9 @@ import { WheelParametersPanel } from './components/WheelParametersPanel';
 import { WheelTelemetryPanel, fmtCycles, fmtLife, sci } from './components/WheelTelemetryPanel';
 import { ViewportInfo } from '../../ui/ViewportInfo';
 import { TwinWorkspace } from '../../ui/TwinWorkspace';
+import { DisplayModeButtons } from '../../three/displayMode';
+import type { DisplayMode } from '../../three/displayMode';
+import '../../three/displayMode.css';
 
 const PHASE: Record<WheelPhase, { label: string; cls: string }> = {
   stopped: { label: 'Stopped', cls: 'stopped' },
@@ -68,7 +71,17 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
   const [viewNonce, setViewNonce] = useState(0);
   const [showTyre, setShowTyre] = useState(true);
   const [showLoads, setShowLoads] = useState(true);
-  const [overlay, setOverlay] = useState(false);
+  const [overlay, setOverlayRaw] = useState(false);
+  const [display, setDisplayRaw] = useState<DisplayMode>('solid');
+  // The stress overlay is its own per-vertex-colour material; Mesh mode would replace it, so the two are exclusive.
+  const setOverlay = (on: boolean) => {
+    setOverlayRaw(on);
+    if (on) setDisplayRaw('solid');
+  };
+  const setDisplay = (m: DisplayMode) => {
+    setDisplayRaw(m);
+    if (m !== 'solid') setOverlayRaw(false);
+  };
   const [section, setSection] = useState(false);
   const [exploded, setExploded] = useState(false);
   const resumeAfterBuild = useRef(false);
@@ -254,6 +267,7 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
             view={view}
             viewNonce={viewNonce}
             overlay={overlay}
+            display={display}
             section={section}
             exploded={exploded}
             showTyre={showTyre}
@@ -310,6 +324,11 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
             </div>
           )}
           <div className="vp-bottom">
+            {display === 'mesh' && (
+              <div className="vp-legend dm-legend">
+                <span className="dm-cap">Twin display mesh: triangles of the 3D model, not an FEA mesh</span>
+              </div>
+            )}
             {(Object.keys(WHEEL_VIEWS) as WheelView[]).map((v) => (
               <button key={v} className={`vp-btn ${view === v ? 'active' : ''}`} onClick={() => chooseView(v)}>
                 {WHEEL_VIEWS[v].label}
@@ -321,6 +340,12 @@ function Body({ moduleSwitch, onRunningChange, clock }: DashboardProps & { clock
             <ToggleBtn on={showTyre} set={setShowTyre} label="Tyre" />
             <ToggleBtn on={section} set={setSection} label="Cut A-A" />
             <ToggleBtn on={exploded} set={setExploded} label="Explode" />
+            <span style={{ width: 8 }} />
+            <DisplayModeButtons
+              mode={display}
+              onChange={setDisplay}
+              disabled={{ temperature: 'The wheel twin has no thermal model; use Stress for the spoke stress field' }}
+            />
             <button className="vp-btn build" style={{ marginLeft: 'auto' }} onClick={clock.active ? () => clock.stop() : startBuild}>
               {clock.active ? '■ Skip build' : '▶ Build from drawing'}
             </button>

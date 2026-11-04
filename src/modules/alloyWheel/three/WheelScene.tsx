@@ -8,6 +8,8 @@ import { BuildClockContext, WheelSimContext, useBuildClock, useWheelSim } from '
 import type { WheelSim } from '../sim/wheelModel';
 import type { BuildClock } from '../wheel/build';
 import { WheelAssembly } from './WheelAssembly';
+import { SceneDisplay } from '../../../three/displayMode';
+import type { DisplayMode } from '../../../three/displayMode';
 import type { AssemblyProps } from './WheelAssembly';
 
 export type WheelView = 'front' | 'section' | 'iso' | 'patch';
@@ -35,9 +37,11 @@ interface SceneProps extends AssemblyProps {
   clock: BuildClock;
   view: WheelView;
   viewNonce: number;
+  /** Shared Solid | Mesh view mode (src/three/displayMode). */
+  display?: DisplayMode;
 }
 
-export const WheelScene = memo(function WheelScene({ sim, clock, view, viewNonce, ...assembly }: SceneProps) {
+export const WheelScene = memo(function WheelScene({ sim, clock, view, viewNonce, display = 'solid', ...assembly }: SceneProps) {
   return (
     <Canvas
       dpr={[1, 2]}
@@ -59,6 +63,7 @@ export const WheelScene = memo(function WheelScene({ sim, clock, view, viewNonce
           <directionalLight position={[-1.2, 0.6, 1]} intensity={1.0} color="#7dd3fc" />
           <pointLight position={[0.7, -0.1, 0.6]} intensity={0.5} color="#38bdf8" />
           <WheelAssembly {...assembly} />
+          <SceneDisplay mode={display} />
           <OrbitControls makeDefault enableDamping dampingFactor={0.08} minDistance={0.3} maxDistance={3} />
           <CameraRig goal={WHEEL_VIEWS[view]} nonce={viewNonce} />
         </BuildClockContext.Provider>
