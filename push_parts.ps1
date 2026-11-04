@@ -9,16 +9,9 @@ if (!(git remote | Select-String "origin")) {
 }
 git branch -M main
 
-$logFile = "D:\TWIN ANIMATION\push_log.txt"
-function Log-Progress($msg) {
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$timestamp : $msg" | Out-File -FilePath $logFile -Append
-    Write-Host $msg
-}
-
-Log-Progress "Starting upload process..."
 # Define parts
 $parts = @(
+    @{ "name" = "Part 1: Config and Root Files"; "path" = ".gitignore .gitattributes README.md package.json tsconfig.json vite.config.ts index.html Backend/backend/requirements.txt" },
     @{ "name" = "Part 2: Backend API and Core"; "path" = "Backend/backend/app/api/ Backend/backend/app/core/ Backend/backend/app/db/" },
     @{ "name" = "Part 3: Backend Engineering"; "path" = "Backend/backend/app/engineering/" },
     @{ "name" = "Part 4: Backend Services and Schemas"; "path" = "Backend/backend/app/services/ Backend/backend/app/schemas/ Backend/backend/app/tests/" },
@@ -27,16 +20,12 @@ $parts = @(
     @{ "name" = "Part 7: Remaining Files"; "path" = "." }
 )
 
-# Intervals in seconds: 10 min, 15 min, 20 min, 20 min, 15 min
-$intervals = @(600, 900, 1200, 1200, 900)
+# Intervals in seconds: 10 min, 15 min, 20 min, 20 min, 15 min, 5 min
+$intervals = @(600, 900, 1200, 1200, 900, 300)
 
 for ($i = 0; $i -lt $parts.Count; $i++) {
-    $interval = $intervals[$i]
-    Log-Progress "Waiting for $($interval/60) minutes before pushing next part..."
-    Start-Sleep -Seconds $interval
-
     $part = $parts[$i]
-    Log-Progress "Pushing $($part.name)..."
+    Write-Host "Pushing $($part.name)..."
     
     # Add files for this part
     foreach ($p in $part.path -split " ") {
@@ -48,6 +37,13 @@ for ($i = 0; $i -lt $parts.Count; $i++) {
     # Commit and push
     git commit -m "Upload $($part.name)"
     git push origin main
+    
+    if ($i -lt $intervals.Count) {
+        $interval = $intervals[$i]
+        $nextTime = (Get-Date).AddSeconds($interval)
+        Write-Host "Waiting for $($interval/60) minutes... Next push at $($nextTime.ToString('HH:mm:ss'))"
+        Start-Sleep -Seconds $interval
+    }
 }
 
-Log-Progress "Task completed successfully."
+Write-Host "Task completed by 2 AM (or earlier)."

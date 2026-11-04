@@ -7,7 +7,7 @@ dist/
 *.mp4
 *.mov
 *reference*.*
-* ref.jpeg
+*ref.jpeg
 frontend/
 frontend.zip
 
@@ -22,6 +22,8 @@ frontend.zip
 .idea/
 .DS_Store
 Thumbs.db
+push_log.txt
+push_parts.ps1
 
 # Python backend
 .venv/
@@ -50,3 +52,4 @@ __pycache__/
 # Local temporary and verification repositories
 /temp_source/
 /verify_repo/
+/Backend/storage/
